@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>林子濠作品集 - 在线预览</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a1a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #f5f5f5;
+      min-height: 100vh;
+    }
+    .toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      background: rgba(26,26,26,0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(245,245,245,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+    }
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .back-btn {
+      color: #f5f5f5;
+      text-decoration: none;
+      font-size: 14px;
+      padding: 6px 14px;
+      border: 1px solid rgba(245,245,245,0.2);
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: rgba(245,245,245,0.1);
+    }
+    .title {
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .page-info {
+      font-size: 13px;
+      color: rgba(245,245,245,0.6);
+    }
+    .zoom-btn {
+      width: 32px;
+      height: 32px;
+      border: 1px solid rgba(245,245,245,0.2);
+      background: transparent;
+      color: #f5f5f5;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .zoom-btn:hover {
+      background: rgba(245,245,245,0.1);
+    }
+    .download-btn {
+      color: #1a1a1a;
+      background: #f5f5f5;
+      text-decoration: none;
+      font-size: 13px;
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .download-btn:hover {
+      opacity: 0.9;
+    }
+    #pdf-container {
+      padding-top: 76px;
+      padding-bottom: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .pdf-page {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      background: white;
+    }
+    .loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: rgba(245,245,245,0.6);
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(245,245,245,0.1);
+      border-top-color: #f5f5f5;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-text {
+      font-size: 14px;
+    }
+    .error-msg {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #f5f5f5;
+      display: none;
+    }
+    .error-msg a {
+      color: #f5f5f5;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <a href="index.html#portfolio" class="back-btn">← 返回</a>
+      <span class="title">林子濠作品集</span>
+    </div>
+    <div class="toolbar-right">
+      <span class="page-info" id="pageInfo">加载中...</span>
+      <button class="zoom-btn" onclick="changeZoom(-0.1)" title="缩小">−</button>
+      <button class="zoom-btn" onclick="changeZoom(0.1)" title="放大">+</button>
+      <a href="portfolio.pdf" download="林子濠作品集.pdf" class="download-btn">下载PDF</a>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">正在加载作品集PDF...</div>
+    <div class="loading-text" style="margin-top:8px;font-size:12px;opacity:0.6;">文件较大(19MB)，请稍候</div>
+  </div>
+
+  <div class="error-msg" id="errorMsg">
+    <p style="margin-bottom:16px;">PDF加载失败，请尝试直接下载查看</p>
+    <a href="portfolio.pdf" download="林子濠作品集.pdf" class="download-btn" style="display:inline-block;">下载PDF</a>
+  </div>
+
+  <div id="pdf-container"></div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    let pdfDoc = null;
+    let scale = 1.2;
+    let renderedPages = new Set();
+
+    async function loadPDF() {
+      try {
+        const loadingTask = pdfjsLib.getDocument('portfolio.pdf');
+        pdfDoc = await loadingTask.promise;
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('pageInfo').textContent = `共 ${pdfDoc.numPages} 页`;
+        
+        // 先渲染前3页
+        for (let i = 1; i <= Math.min(3, pdfDoc.numPages); i++) {
+          renderPage(i);
+        }
+        
+        // 监听滚动，懒加载其他页
+        window.addEventListener('scroll', handleScroll);
+      } catch (error) {
+        console.error('PDF加载失败:', error);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('errorMsg').style.display = 'block';
+      }
+    }
+
+    async function renderPage(num) {
+      if (renderedPages.has(num)) return;
+      renderedPages.add(num);
+      
+      try {
+        const page = await pdfDoc.getPage(num);
+        const viewport = page.getViewport({ scale: scale });
+        
+        const canvas = document.createElement('canvas');
+        canvas.className = 'pdf-page';
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = viewport.width + 'px';
+        canvas.style.maxWidth = '100%';
+        canvas.style.height = 'auto';
+        canvas.dataset.pageNum = num;
+        
+        const container = document.getElementById('pdf-container');
+        container.appendChild(canvas);
+        
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+      } catch (error) {
+        console.error(`第${num}页渲染失败:`, error);
+      }
+    }
+
+    function handleScroll() {
+      if (!pdfDoc) return;
+      
+      const pages = document.querySelectorAll('.pdf-page');
+      const scrollBottom = window.innerHeight + window.scrollY + 500;
+      
+      pages.forEach((page) => {
+        if (page.offsetTop < scrollBottom) {
+          const nextNum = parseInt(page.dataset.pageNum) + 1;
+          if (nextNum <= pdfDoc.numPages) {
+            renderPage(nextNum);
+          }
+        }
+      });
+    }
+
+    function changeZoom(delta) {
+      scale = Math.max(0.5, Math.min(2.5, scale + delta));
+      // 重新渲染所有已加载的页
+      renderedPages.clear();
+      document.getElementById('pdf-container').innerHTML = '';
+      for (let i = 1; i <= Math.min(3, pdfDoc.numPages); i++) {
+        renderPage(i);
+      }
+    }
+
+    loadPDF();
+  </script>
+</body>
+</html>
