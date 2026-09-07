@@ -171,17 +171,36 @@
     let pdfDoc = null;
     let scale = 1.2;
     let renderedPages = new Set();
+    let targetPage = null;
+
+    // 从URL参数获取目标页码 (?page=N)
+    function getTargetPage() {
+      const params = new URLSearchParams(window.location.search);
+      const p = parseInt(params.get('page'));
+      return (!isNaN(p) && p >= 1) ? p : null;
+    }
 
     async function loadPDF() {
+      targetPage = getTargetPage();
       try {
         const loadingTask = pdfjsLib.getDocument('portfolio.pdf');
         pdfDoc = await loadingTask.promise;
         document.getElementById('loading').style.display = 'none';
-        document.getElementById('pageInfo').textContent = `共 ${pdfDoc.numPages} 页`;
         
-        // 先渲染前3页
-        for (let i = 1; i <= Math.min(3, pdfDoc.numPages); i++) {
-          renderPage(i);
+        if (targetPage !== null && targetPage <= pdfDoc.numPages) {
+          // 指定页码模式：渲染目标页，并滚动到该页
+          document.getElementById('pageInfo').textContent = `第 ${targetPage} / ${pdfDoc.numPages} 页`;
+          renderPage(targetPage);
+          setTimeout(() => {
+            const canvas = document.querySelector(`.pdf-page[data-page-num="${targetPage}"]`);
+            if (canvas) canvas.scrollIntoView({ block: 'start' });
+          }, 100);
+        } else {
+          document.getElementById('pageInfo').textContent = `共 ${pdfDoc.numPages} 页`;
+          // 先渲染前3页
+          for (let i = 1; i <= Math.min(3, pdfDoc.numPages); i++) {
+            renderPage(i);
+          }
         }
         
         // 监听滚动，懒加载其他页
