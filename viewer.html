@@ -180,10 +180,29 @@
       return (!isNaN(p) && p >= 1) ? p : null;
     }
 
+    // 从URL参数获取要加载的PDF文件 (?file=xxx.pdf)，默认portfolio.pdf
+    function getPdfFile() {
+      const params = new URLSearchParams(window.location.search);
+      const f = params.get('file');
+      return (f && f.endsWith('.pdf')) ? f : 'portfolio.pdf';
+    }
+
     async function loadPDF() {
       targetPage = getTargetPage();
+      const pdfFile = getPdfFile();
       try {
-        const loadingTask = pdfjsLib.getDocument('portfolio.pdf');
+        // 更新标题显示文件名
+        const titleEl = document.querySelector('.title');
+        if (titleEl && pdfFile !== 'portfolio.pdf') {
+          const names = {
+            '1.pdf': '打印设备设计',
+            '2.pdf': '运动健康产品',
+            '3.pdf': '手绘设计合集',
+            '4.pdf': '作品集合集'
+          };
+          titleEl.textContent = names[pdfFile] || pdfFile.replace('.pdf', '');
+        }
+        const loadingTask = pdfjsLib.getDocument(pdfFile);
         pdfDoc = await loadingTask.promise;
         document.getElementById('loading').style.display = 'none';
         
