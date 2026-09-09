@@ -197,7 +197,7 @@
           const names = {
             '1.pdf': '打印设备设计',
             '2.pdf': '运动健康产品',
-            '3.pdf': '产品手绘',
+            '3.pdf': '手绘设计合集',
             '4.pdf': '作品集合集'
           };
           titleEl.textContent = names[pdfFile] || pdfFile.replace('.pdf', '');
@@ -253,32 +253,9 @@
         
         const ctx = canvas.getContext('2d');
         await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-        // 页面渲染完成后叠加防伪水印
-        drawWatermark(ctx, viewport.width, viewport.height);
       } catch (error) {
         console.error(`第${num}页渲染失败:`, error);
       }
-    }
-
-    // 在PDF页面上叠加半透明斜向平铺水印
-    function drawWatermark(ctx, w, h) {
-      ctx.save();
-      ctx.globalAlpha = 0.08;
-      ctx.fillStyle = '#1a1a1a';
-      ctx.font = '600 26px "Inter", "PingFang SC", "Microsoft YaHei", sans-serif';
-      ctx.textAlign = 'center';
-      const text = 'Harry Lin / 林子濠';
-      ctx.translate(w / 2, h / 2);
-      ctx.rotate(-Math.PI / 6);
-      const diag = Math.sqrt(w * w + h * h);
-      const spacingX = 280;
-      const spacingY = 150;
-      for (let x = -diag; x < diag; x += spacingX) {
-        for (let y = -diag; y < diag; y += spacingY) {
-          ctx.fillText(text, x, y);
-        }
-      }
-      ctx.restore();
     }
 
     function handleScroll() {
