@@ -280,14 +280,14 @@
 </div>
 <script>
 (function(){
-  if (sessionStorage.getItem('portfolio_auth') === '1') return;
+  if (localStorage.getItem('portfolio_auth') === '1') return;
   var lock = document.getElementById('pw-lock');
   lock.style.display = 'flex';
   var PASS = atob('SGFycnkyMDI2'); // Harry2026（前端方案，防君子不防小人）
   function check(){
     var v = document.getElementById('pw-input').value;
     if (v === PASS) {
-      sessionStorage.setItem('portfolio_auth', '1');
+      localStorage.setItem('portfolio_auth', '1');
       lock.style.display = 'none';
       document.getElementById('pw-input').value = '';
     } else {
