@@ -264,6 +264,45 @@
   </head>
   <body class="bg-paper text-ink">
 
+<!-- ===== Password Lock (方案一：前端密码门，防君子) ===== -->
+<div id="pw-lock" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#1a1a1a;align-items:center;justify-content:center;flex-direction:column;font-family:'Inter',system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;">
+  <div style="text-align:center;padding:0 24px;width:100%;max-width:380px;">
+    <div style="font-family:'Space Grotesk','Inter',sans-serif;font-size:clamp(20px,5vw,26px);font-weight:600;color:#f5f5f5;letter-spacing:0.5px;">Harry Lin / 林子濠</div>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;letter-spacing:4px;color:rgba(245,245,245,0.4);margin-top:8px;">INDUSTRIAL DESIGN PORTFOLIO</div>
+    <div style="width:36px;height:1px;background:rgba(245,245,245,0.25);margin:28px auto;"></div>
+    <div style="font-size:14px;color:rgba(245,245,245,0.7);margin-bottom:20px;">请输入访问密码</div>
+    <input id="pw-input" type="password" placeholder="Password" autocomplete="off"
+      style="width:100%;padding:14px 16px;font-size:16px;background:rgba(245,245,245,0.06);border:1px solid rgba(245,245,245,0.25);border-radius:8px;color:#f5f5f5;outline:none;box-sizing:border-box;text-align:center;letter-spacing:2px;" />
+    <button id="pw-btn"
+      style="width:100%;margin-top:14px;padding:14px 0;font-size:15px;font-weight:500;background:#f5f5f5;color:#1a1a1a;border:none;border-radius:8px;cursor:pointer;">进入 Enter</button>
+    <div id="pw-err" style="display:none;margin-top:14px;font-size:13px;color:#e06060;">密码错误，请重试</div>
+  </div>
+</div>
+<script>
+(function(){
+  if (sessionStorage.getItem('portfolio_auth') === '1') return;
+  var lock = document.getElementById('pw-lock');
+  lock.style.display = 'flex';
+  var PASS = atob('SGFycnkyMDI2'); // Harry2026（前端方案，防君子不防小人）
+  function check(){
+    var v = document.getElementById('pw-input').value;
+    if (v === PASS) {
+      sessionStorage.setItem('portfolio_auth', '1');
+      lock.style.display = 'none';
+      document.getElementById('pw-input').value = '';
+    } else {
+      document.getElementById('pw-err').style.display = 'block';
+      document.getElementById('pw-input').value = '';
+      document.getElementById('pw-input').focus();
+    }
+  }
+  document.getElementById('pw-btn').onclick = check;
+  document.getElementById('pw-input').addEventListener('keydown', function(ev){ if (ev.key === 'Enter') check(); });
+  document.getElementById('pw-input').focus();
+})();
+</script>
+
+
     <!-- Grain overlay -->
     <div class="grain"></div>
 
